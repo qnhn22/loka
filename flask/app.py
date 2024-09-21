@@ -10,7 +10,10 @@ app = Flask(__name__)
 @app.route('/', methods=['GET'])
 def home():
     return jsonify({'message': 'Welcome to the API!'})
-@app.route('/restaurants', methods=['GET'])
+
+
+
+@app.route('/api/restaurants', methods=['GET'])
 def get_restaurants():
     city = request.args.get('city')
     food_type = request.args.get('food_type')
@@ -37,7 +40,7 @@ def get_restaurants():
         positions.append(position)    
     return jsonify(positions)
 
-@app.route('/rent/listing', methods=['GET'])
+@app.route('/api/rent/listing', methods=['GET'])
 def get_rents():
     try:
         cityId = request.args.get('cityId')
@@ -78,7 +81,7 @@ def get_rents():
         
     return jsonify(positions)
 
-@app.route('/rent/details', methods=['GET'])
+@app.route('/api/rent/details', methods=['GET'])
 def get_rents_details():
     file_path = 'listings.json'
     try:

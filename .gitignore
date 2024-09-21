@@ -5,3 +5,5 @@ __pycache__/
 listingDetails
 data.py 
 listings.json
+.venv
+sample.js

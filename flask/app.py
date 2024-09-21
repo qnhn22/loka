@@ -7,6 +7,9 @@ load_dotenv()
 
 app = Flask(__name__)
 
+@app.route('/', methods=['GET'])
+def home():
+    return jsonify({'message': 'Welcome to the API!'})
 @app.route('/restaurants', methods=['GET'])
 def get_restaurants():
     city = request.args.get('city')
@@ -34,7 +37,7 @@ def get_restaurants():
         positions.append(position)    
     return jsonify(positions)
 
-@app.route('/rent', methods=['GET'])
+@app.route('/rent/listing', methods=['GET'])
 def get_rents():
     try:
         cityId = request.args.get('cityId')
@@ -95,7 +98,6 @@ def get_rents_details():
         detail_listings_id_url=""
         for i in range(len(samples)) :
             listingId = samples[i]['listingId']
-            print("listingId",listingId)
             file_path=f'listingDetails/listing_{listingId}.json'
             if not os.path.exists(file_path):
                 with open(file_path, 'w') as f:
@@ -119,4 +121,4 @@ def get_rents_details():
         return jsonify({'error': f'An error occurred: {e}'}), 500
     
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True,host='0.0.0.0')

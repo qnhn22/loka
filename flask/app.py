@@ -89,7 +89,7 @@ def get_rents_details():
             data = json.load(json_file)  # Load JSON data from the file
         folder_path = 'listingDetails'
         os.makedirs(folder_path, exist_ok=True)
-        coor_map = {item['listingId']: item['coordinations'] for item in data}
+        coor_map = {item['listingId']: item['coordinations'] for item in data}    
         api_key = os.getenv('LOOP_API')
         listing_detail_endpoint = 'https://loopnet-api.p.rapidapi.com/loopnet/property/SaleDetails'
         headers = {
@@ -113,7 +113,32 @@ def get_rents_details():
             data = response.json().get('data', [])
             with open(file_path, 'w') as f:
                 json.dump(data, f, indent=4)
-             
+           '''
+                restaurant:
+                    food_type: enum
+                    price_level: long
+                    longtitude:
+                    latitude:
+                    city:
+                
+           
+              real estate:
+                listingID
+                longtintue
+                latitutde
+                city
+                population
+                cost per square
+                
+           '''
+           
+           '''
+           for each real estate:
+           calculate x: sum distance x to competitor
+           cost per square;
+           population
+           
+           '''
         return jsonify({'info': "ok"})  
 
     except FileNotFoundError:

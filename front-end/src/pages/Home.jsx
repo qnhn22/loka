@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import Map from "../components/Map";
 import Input from "../components/Input";
+import {withRequiredAuthInfo} from "@propelauth/react";
 function HomePage() {
  
   return (
@@ -18,4 +19,4 @@ function HomePage() {
   );
 }
 
-export default HomePage;
+export default withRequiredAuthInfo(HomePage);

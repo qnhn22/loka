@@ -34,6 +34,7 @@ def find_best_locations():
     city = request.args.get('city')
     cuisine_type = request.args.get('cuisine_type')
     price_level = request.args.get('price_level')
+
     rents = fetch_rents(city)
     candidates = [{
         'total_distance_to_competitors': 0,
@@ -44,7 +45,7 @@ def find_best_locations():
     restaurants = list(fetch_restaurants(city, cuisine_type))
     competitors = []
     for res in restaurants:
-        if res['price_level'] == price_level:
+        if res['price_level'] == int(price_level):
             competitors.append(res)
 
     metrics_coors = {}

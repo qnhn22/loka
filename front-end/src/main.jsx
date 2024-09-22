@@ -1,0 +1,17 @@
+import { StrictMode } from 'react'
+import { createRoot } from 'react-dom/client'
+import App from './App.jsx'
+import './index.css'
+import { AuthProvider } from "@propelauth/react";
+import {BrowserRouter} from "react-router-dom";
+createRoot(document.getElementById('root')).render(
+  <StrictMode>
+     <AuthProvider authUrl={"https://215840072.propelauthtest.com"}>
+     <BrowserRouter>
+    <App />
+
+    </BrowserRouter>
+    </AuthProvider>
+
+  </StrictMode>
+)

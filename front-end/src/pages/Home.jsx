@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import Map from "../components/Map";
-import Input from "../components/Input";
 import { withRequiredAuthInfo } from "@propelauth/react";
 import axios from "axios";
+import { backendURL } from "../../config";
 function HomePage() {
   const [showResults, toggleShowResults] = useState(true);
   const [city, setCity] = useState("");
@@ -37,8 +37,22 @@ function HomePage() {
       costLevel,
       rentBudget,
     };
+    console.log(searchParams);
     toggleShowResults(true);
-    const endPoint = "YOUR_API_ENDPOINT";
+    const endPoint = backendURL;
+    
+      axios
+        .get(endPoint, {
+          headers: searchParams,
+        })
+        .then((response) => {
+          setLocations(response.data);
+          toggleShowResults(true);
+        })
+        .catch((error) => {
+          console.error("There was an error fetching the data!", error);
+        });
+    
     // axios
     //   .get(endPoint, {
     //     headers: searchParams,

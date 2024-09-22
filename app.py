@@ -13,6 +13,9 @@ import re
 import os
 import time
 import random
+import numpy as np
+from models.weight_sum_op import WeightSumOptimization
+import pandas
 load_dotenv()
 
 app = Flask(__name__)
@@ -27,27 +30,69 @@ populations_db = db['population']
 
 
 @app.route('/', methods=['GET'])
-def find_best_locations():
-    city = request.args.get('city')
-    cuisine_type = request.args.get('cuisine_type')
-    price_level = request.args.get('price_level')
+def find_best_locations(city, cuisine_type, price_level):
+    # city = request.args.get('city')
+    # cuisine_type = request.args.get('cuisine_type')
+    # price_level = request.args.get('price_level')
     rents = fetch_rents(city)
     candidates = [{
-        'id': '',
         'total_distance_to_competitors': 0,
         'cost': 0,
-        ' population': 0,
+        'population': 0,
     } for _ in rents]
 
+    restaurants = list(fetch_restaurants(city, cuisine_type))
+    competitors = []
+    for res in restaurants:
+        if res['price_level'] == price_level:
+            competitors.append(res)
+
+    metrics_coors = {}
     for i in range(len(rents)):
         r = rents[i]
-        candidates[i]['id'] = r['listingId']
-        candidates[i]['total_distance_to_competitiors'] = calculate_distance_competitors(
-            (r['lng'], r['lat']), city, cuisine_type, price_level)
+        candidates[i]['total_distance_to_competitors'] = calculate_distance_competitors(
+            (r['lng'], r['lat']), competitors)
         candidates[i]['cost'] = r['cost']
         candidates[i]['population'] = r['population']
+        metrics_coors[(candidates[i]['total_distance_to_competitors'], candidates[i]['cost'], candidates[i]['population'])] = {
+            'lng': r['lng'],
+            'lat': r['lat'],
+        }
 
-    # rank and return coordinates
+    data = {
+        'distance': [],
+        'price': [],
+        'population': []
+    }
+    for i in range(len(candidates)):
+        data['distance'].append(candidates[i]['total_distance_to_competitors'])
+        data['price'].append(candidates[i]['cost'])
+        data['population'].append(candidates[i]['population'])
+    print(data)
+
+    w_s_op = WeightSumOptimization(data)
+    rank = w_s_op.rank_data()
+    print(rank)
+    ranked_candidates = [tuple(x) for x in rank.to_records(index=False)]
+    locations = []
+
+    thres = 10
+    if len(ranked_candidates) < 10:
+        thres = len(ranked_candidates)
+
+    for i in range(thres):
+        distance = ranked_candidates[i][0]
+        cost = ranked_candidates[i][1]
+        population = ranked_candidates[i][2]
+        locations.append({
+            'distance': distance,
+            'cost': cost,
+            'population': population,
+            'lng': metrics_coors[(distance, cost, population)]['lng'],
+            'lat': metrics_coors[(distance, cost, population)]['lat']
+        })
+    print(locations)
+    return jsonify(locations)
 
 
 def fetch_rents(city):
@@ -89,10 +134,7 @@ def fetch_rents(city):
         response = requests.post(
             listing_detail_endpoint, headers=headers, json=body)
         data = response.json().get('data', [])
-        print("kekekekekekek")
-        file_path = 'listings.json'
-        with open(file_path, 'w') as f:
-            json.dump(data, f, indent=4)
+
         if not data:
             continue
 
@@ -160,44 +202,12 @@ def fetch_restaurants(city, cuisine_type):
     return restaurants
 
 
-def calculate_distance_competitors(coor, city, cuisine_type, price_level):
-    query = {
-        'city': city,
-        'cuisine_type': cuisine_type,
-        'price_level': price_level
-    }
-    competitors = list(restaurants_db.find(query, {query}))
+def calculate_distance_competitors(coor, competitors):
     lng, lat = coor
     total_dist = 0
     for c in competitors:
         total_dist += math.sqrt((lng - c['lng'])**2 + (lat - c['lat'])**2)
     return total_dist
-
-
-# def fetch_neighborhood_populations(city):
-#     # fetch the population of each neighborhood in the given city
-#     client = Cerebras(
-#         api_key=os.getenv('CEREBRAS_API'))
-
-#     chat_completion = client.chat.completions.create(
-#         model="llama3.1-8b",
-#         messages=[
-#             {"role": "user", "content": f"Generate a Python dictionary where the keys are the neighborhoods of {city} and the values are the population counts. Format the output as a valid Python dictionary without any comment.", }
-#         ],
-#     )
-
-#     # Extract and process the result
-#     result = chat_completion.choices[0].message.content.strip()
-#     # Fetch {...} part in the responded string
-#     match = re.findall(r'\{[^}]*\}', result)
-
-#     input = {
-#         'city': city,
-#         'pop': neighborhood_populations
-#     }
-#     neighborhoods_db.insert_one(input)
-
-#     return neighborhood_populations
 
 
 if __name__ == '__main__':

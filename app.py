@@ -11,6 +11,7 @@ import certifi
 from cerebras.cloud.sdk import Cerebras
 import re
 import os
+import time
 import random
 load_dotenv()
 
@@ -72,7 +73,7 @@ def fetch_rents(city):
         'x-rapidapi-host': 'loopnet-api.p.rapidapi.com'
     }
 
-    samples = rentsData
+    samples = rentsData[:20]
 
     neighborhoods_pop = neighborhoods_db.find_one({'city': city})['pop']
 
@@ -125,6 +126,8 @@ def fetch_rents(city):
         }
         rents.append(rent)
         rents_db.insert_one(rent)
+
+        time.sleep(0.5)
     return res
 
 

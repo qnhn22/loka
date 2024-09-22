@@ -15,10 +15,12 @@ import time
 import random
 import numpy as np
 from models.weight_sum_op import WeightSumOptimization
+from flask_cors import CORS
 import pandas
 load_dotenv()
 
 app = Flask(__name__)
+CORS(app)
 
 mongo_uri = f"{os.getenv('MONGO_URI')}&tlsCAFile={quote_plus(certifi.where())}"
 client = MongoClient(mongo_uri, server_api=ServerApi(

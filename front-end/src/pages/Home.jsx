@@ -10,20 +10,20 @@ function HomePage() {
   const [costLevel, setCostLevel] = useState("");
   const [rentBudget, setRentBudget] = useState("");
   const [locations, setLocations] = useState([]);
-  useEffect(() => { 
+  useEffect(() => {
     setLocations([
       {
         "cost": 2500,
         "distance": 0,
-        "lat": 40.712776,
-        "lng": -74.005974,
+        "lat": 33.712776,
+        "lng": -118.005974,
         "population": 5000
       },
       {
         "cost": 2700,
         "distance": 0,
-        "lat": 40.713776,
-        "lng": -74.004974,
+        "lat": 33.713776,
+        "lng": -118.004974,
         "population": 5000
       },])
   }, []);
@@ -33,26 +33,24 @@ function HomePage() {
     e.preventDefault();
     const searchParams = {
       city,
-      cuisine,
-      costLevel,
-      rentBudget,
+      cuisine_type: cuisine,
+      price_level: costLevel,
+      rent_budge: rentBudget,
     };
     console.log(searchParams);
     toggleShowResults(true);
-    const endPoint = backendURL;
-    
-      axios
-        .get(endPoint, {
-          headers: searchParams,
-        })
-        .then((response) => {
-          setLocations(response.data);
-          toggleShowResults(true);
-        })
-        .catch((error) => {
-          console.error("There was an error fetching the data!", error);
-        });
-    
+    const endPoint = 'http://127.0.0.1:5000?city=Seattle&cuisine_type=Chinese&price_level=2';
+
+    axios
+      .get(endPoint)
+      .then((response) => {
+        setLocations(response.data);
+        toggleShowResults(true);
+      })
+      .catch((error) => {
+        console.error("There was an error fetching the data!", error);
+      });
+
     // axios
     //   .get(endPoint, {
     //     headers: searchParams,
@@ -118,37 +116,37 @@ function HomePage() {
           </>
         </div>
         {showResults ? (
-        <>
-          <div className="relative w-[25%] bg-opacity-50 bg-gray-200 p-4 text-lg">
-            <button
-              className="absolute top-0 right-0 m-2 cursor-pointer text-xl"
-              onClick={() => { toggleShowResults(false) }}
-            >
-              X
-            </button>
-            {locations.map((location, index) => (
-              <div key={index} className=" border-b-2 border-gray-400 mt-2 flex-col flex justify-start gap-x-3 p-3">
-                <span><b>Cost:</b> {location.cost} $</span>
-                <span><b>Population:</b> {location.population}</span>
-                <span><b>Total Distance from competitors:</b> {location.distance}  </span>
+          <>
+            <div className="relative w-[25%] bg-opacity-50 bg-gray-200 p-4 text-lg">
+              <button
+                className="absolute top-0 right-0 m-2 cursor-pointer text-xl"
+                onClick={() => { toggleShowResults(false) }}
+              >
+                X
+              </button>
+              {locations.map((location, index) => (
+                <div key={index} className=" border-b-2 border-gray-400 mt-2 flex-col flex justify-start gap-x-3 p-3">
+                  <span><b>Cost:</b> {location.cost} $</span>
+                  <span><b>Population:</b> {location.population}</span>
+                  <span><b>Total Distance from competitors:</b> {location.distance}  </span>
 
-              </div>
-            ))}
+                </div>
+              ))}
+            </div>
+          </>
+        ) : (
+          <></>
+        )}
+        {showResults ? (<>
+          <div className="w-[50%]">
+            <Map locations={locations} />
           </div>
-        </>
-      ) : (
-        <></>
-      )}
-      {showResults ?( <>
-        <div className="w-[50%]">
-          <Map locations={locations}/>
-        </div>
-      </>):<>
-      
-        <div className="w-[70%]">
-          <Map locations={locations}/>
-        </div>
-      </>}
+        </>) : <>
+
+          <div className="w-[70%]">
+            <Map locations={locations} />
+          </div>
+        </>}
       </div>
     </>
   );

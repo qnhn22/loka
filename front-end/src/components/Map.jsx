@@ -1,12 +1,23 @@
-import React, { useEffect ,useState} from 'react';
-import { APIProvider, Map, Marker,InfoWindow  } from '@vis.gl/react-google-maps';
-const GoogleMap = ({locations}) => {
+import React, { useEffect, useState } from 'react';
+import { APIProvider, Map, Marker, InfoWindow } from '@vis.gl/react-google-maps';
+const GoogleMap = ({ locations }) => {
   const [selectedMarker, setSelectedMarker] = useState(null);
+  const [topLocations, setTopLocations] = useState(locations);
   const key = "AIzaSyDpLOyGUc0JQH8U79KVMOnXbh1ZG57BnmE"
-  const center = { lat: 40.712576, lng: -74.007474 }; // Adjust this to fit your use case
+  const [center, setCenter] = useState({ lat: 33, lng: -118 })  // Adjust this to fit your use case
   const handleMarkerClick = (location) => {
     setSelectedMarker(location);
   };
+  console.log(locations);
+
+  useEffect(() => {
+    if (locations !== null & locations.length > 0) {
+      setCenter({ lat: locations[0].lat, lng: locations[0].lng })
+    }
+    setTopLocations(locations)
+  }, [locations.length])
+  console.log(locations);
+  console.log(center);
 
   return (
     <div className='h-screen w-full flex justify-center m-2'>
@@ -14,21 +25,21 @@ const GoogleMap = ({locations}) => {
         <Map
           className='w-full h-full border-3 border-gray-100'
           defaultCenter={center}
-          defaultZoom={18}
+          defaultZoom={10}
           gestureHandling={'greedy'}
           disableDefaultUI={true}
 
         >
           <Marker position={center} />
-          {locations&&locations.map((location, index) => (
+          {topLocations && topLocations.map((location, index) => (
             <Marker
               key={index}
               position={{ lat: location.lat, lng: location.lng }}
-            onClick={() => handleMarkerClick(location)}
-              />
+              onClick={() => handleMarkerClick(location)}
+            />
           ))}
 
-{selectedMarker && (
+          {selectedMarker && (
             <InfoWindow
               position={selectedMarker}
               onCloseClick={() => setSelectedMarker(null)}

@@ -2,113 +2,145 @@ from flask import Flask, request, jsonify
 import requests
 import os
 from dotenv import load_dotenv
-from cerebras.cloud.sdk import Cerebras
 import json
+from pymongo import MongoClient
+from pymongo.server_api import ServerApi
+import math
+from urllib.parse import quote_plus
+import certifi
+from cerebras.cloud.sdk import Cerebras
 import re
+import os
+import random
 load_dotenv()
 
 app = Flask(__name__)
 
+mongo_uri = f"{os.getenv('MONGO_URI')}&tlsCAFile={quote_plus(certifi.where())}"
+client = MongoClient(mongo_uri, server_api=ServerApi(
+    version="1", strict=True, deprecation_errors=True))
+db = client['loka']
+restaurants_db = db['restaurant']
+rents_db = db['rent']
+neighborhoods_db = db['neighborhood']
 
-@app.route('/restaurants', methods=['GET'])
-def get_restaurants():
+
+@app.route('/', methods=['GET'])
+def find_best_locations():
     city = request.args.get('city')
-    food_type = request.args.get('food_type')
+    cuisine_type = request.args.get('cuisine_type')
     price_level = request.args.get('price_level')
-    positions = fetch_competitor_restaurants(city, food_type, price_level)
-    return jsonify(positions)
+    rents = fetch_rents(city)
+    candidates = [{
+        'total_distance_to_competitors': 0,
+        'cost': 0,
+        ' population': 0,
+    } for _ in rents]
+
+    for i in range(len(rents)):
+        r = rents[i]
+        candidates[i]['total_distance_to_competitiors'] = calculate_distance_competitors(
+            (r['lng'], r['lat']), city, cuisine_type, price_level)
+        candidates[i]['cost'] = r['cost']
+        candidates[i]['population'] = r['population']
+
+    # rank and return coordinates
 
 
-@app.route('/rent', methods=['GET'])
-def get_rents():
-    try:
-        cityId = request.args.get('cityId')
-        api_key = os.getenv('LOOP_API')
-        listing_endpoint = 'https://loopnet-api.p.rapidapi.com/loopnet/sale/searchByCity'
+def fetch_rents(city):
+    rents = list(rents_db.find({'city': city}))
+    if rents:
+        return rents
 
-        headers = {
-            'x-rapidapi-key': api_key,
-            'x-rapidapi-host': 'loopnet-api.p.rapidapi.com'
-        }
+    api_key = os.getenv('LOOP_API')
+    listing_endpoint = 'https://loopnet-api.p.rapidapi.com/loopnet/sale/searchByCity'
+
+    headers = {
+        'x-rapidapi-key': api_key,
+        'x-rapidapi-host': 'loopnet-api.p.rapidapi.com'
+    }
+    body = {
+        'city': city
+    }
+
+    res = requests.post(listing_endpoint, headers=headers, json=body)
+
+    rentsData = res.json().get('data', [])
+    listing_detail_endpoint = 'https://loopnet-api.p.rapidapi.com/loopnet/property/SaleDetails'
+    headers = {
+        'x-rapidapi-key': api_key,
+        'x-rapidapi-host': 'loopnet-api.p.rapidapi.com'
+    }
+
+    samples = rentsData
+
+    neighborhoods_pop = neighborhoods_db.find_one({'city': city})['pop']
+
+    for i in range(len(samples)):
+        listingId = samples[i]['listingId']
+        lng = samples[i]['coordinations'][0][0]
+        lat = samples[i]['coordinations'][0][1]
+        print("listingId", listingId)
         body = {
-            'cityId': cityId
+            "listingId": listingId
         }
-
-        response = requests.post(listing_endpoint, headers=headers, json=body)
-        response.raise_for_status()  # Raise an error for bad responses
-
+        response = requests.post(
+            listing_detail_endpoint, headers=headers, json=body)
         data = response.json().get('data', [])
         file_path = 'listings.json'
+        with open(file_path, 'w') as f:
+            json.dump(data, f, indent=4)
+        if not data:
+            continue
+        gg_geocoding_api_key = os.getenv('GOOGLE_MAP_API')
+        gg_geocoding_api = f"https://maps.googleapis.com/maps/api/geocode/json?latlng={lat},{lng}&key={gg_geocoding_api_key}"
+        response = requests.get(gg_geocoding_api)
 
-        try:
-            with open(file_path, 'w') as f:
-                json.dump(data, f, indent=4)
-            print(
-                f'File "{file_path}" created successfully with API response data.')
+        results = response.json().get('results', [])
 
-            return jsonify({
-                'message': f'File "{file_path}" created successfully with API response data.'
-            })
+        if not results:
+            continue
+        address_components = results[0].get("address_components", [])
 
-        except Exception as file_error:
-            print("File already created")
-            return jsonify({
-                'message': f'File "{file_path}" created successfully with API response data.'
-            })
+        neighborhood = ''
+        for component in address_components:
+            if 'neighborhood' in component['types']:
+                # Return the neighborhood name
+                neighborhood = component['long_name']
+        if not neighborhood or neighborhood not in neighborhoods_pop:
+            continue
 
-    except requests.exceptions.RequestException as e:
-        return jsonify({'error': f'Error fetching data from API: {e}'}), 500
+        rents = []
 
-    return jsonify(positions)
+        # if data[0]['price'] == None:
+        #     continue
 
-
-@app.route('/rent/details', methods=['GET'])
-def get_rents_details():
-    file_path = 'listings.json'
-    try:
-        with open(file_path, 'r') as json_file:
-            data = json.load(json_file)  # Load JSON data from the file
-        folder_path = 'listingDetails'
-        os.makedirs(folder_path, exist_ok=True)
-        coor_map = {item['listingId']: item['coordinations'] for item in data}
-        api_key = os.getenv('LOOP_API')
-        listing_detail_endpoint = 'https://loopnet-api.p.rapidapi.com/loopnet/property/SaleDetails'
-        headers = {
-            'x-rapidapi-key': api_key,
-            'x-rapidapi-host': 'loopnet-api.p.rapidapi.com'
+        rent = {
+            'listingId': listingId,
+            'lng': lng,
+            'lat': lat,
+            'city': city,
+            'cost': random.randint(2000, 4000),
+            'population': neighborhoods_pop[neighborhood]
         }
-        # sample size to get detail
-        samples = data[:2]
-        detail_listings_id_url = ""
-        for i in range(len(samples)):
-            listingId = samples[i]['listingId']
-            print("listingId", listingId)
-            file_path = f'listingDetails/listing_{listingId}.json'
-            if not os.path.exists(file_path):
-                with open(file_path, 'w') as f:
-                    pass
-            body = {
-                "listingId": listingId
-            }
-            response = requests.post(
-                listing_detail_endpoint, headers=headers, json=body)
-            response.raise_for_status()
-            data = response.json().get('data', [])
-            with open(file_path, 'w') as f:
-                json.dump(data, f, indent=4)
-
-        return jsonify({'info': "ok"})
-
-    except FileNotFoundError:
-        return jsonify({'error': f'The file "{file_path}" was not found.'}), 404
-    except json.JSONDecodeError:
-        return jsonify({'error': 'Failed to decode JSON from the file.'}), 400
-    except Exception as e:
-        return jsonify({'error': f'An error occurred: {e}'}), 500
+        rents.append(rent)
+        rents_db.insert_one(rent)
+    return res
 
 
-def fetch_competitor_restaurants(city, cuisine_type, price_level):
-    # fetch all the competitors with the requesting user
+def fetch_restaurants(city, cuisine_type):
+    query = {
+        "city": city,
+        "cuisine_type": cuisine_type,
+    }
+
+    print("hello world")
+
+    # check whether cuisine_type restaurants from city have been fetch from API,
+    restaurants = list(restaurants_db.find(query, {"_id": 0}))
+    if restaurants:
+        return restaurants
+
     api_key = os.getenv('GOOGLE_MAP_API')
     endpoint = 'https://maps.googleapis.com/maps/api/place/textsearch/json'
 
@@ -120,38 +152,63 @@ def fetch_competitor_restaurants(city, cuisine_type, price_level):
 
     response = requests.get(endpoint, params=params)
     results = response.json().get('results', [])
-    positions = []
+    restaurants = []
     for result in results:
-        if 'price_level' in result and result['price_level'] == price_level:
-            position = {
-                'lat': result['geometry']['location']['lat'],
+        if 'price_level' in result:
+            r = {
+                'city': city,
+                'cuisine_type': cuisine_type,
+                'price_level': result['price_level'],
                 'lng': result['geometry']['location']['lng'],
+                'lat': result['geometry']['location']['lat'],
             }
-            positions.append(position)
-    return positions
+            restaurants_db.insert_one(r)
+            restaurants.append(r)
+    return restaurants
 
 
-def fetch_neighborhood_populations(city):
-    # fetch the population of each neighborhood in the given city
-    client = Cerebras(
-        api_key=os.getenv('CEREBRAS_API'))
+def calculate_distance_competitors(coor, city, cuisine_type, price_level):
+    query = {
+        'city': city,
+        'cuisine_type': cuisine_type,
+        'price_level': price_level
+    }
+    competitors = list(restaurants_db.find(query, {query}))
+    lng, lat = coor
+    total_dist = 0
+    for c in competitors:
+        total_dist += math.sqrt((lng - c['lng'])**2 + (lat - c['lat'])**2)
+    return total_dist
 
-    chat_completion = client.chat.completions.create(
-        model="llama3.1-8b",
-        messages=[
-            {"role": "user", "content": f"Generate a Python dictionary where the keys are the neighborhoods of {city} and the values are the population counts. Format the output as a valid Python dictionary.", }
-        ],
-    )
 
-    # Extract and process the result
-    result = chat_completion.choices[0].message.content.strip()
-    # Fetch {...} part in the responded string
-    match = re.findall(r'\{[^}]*\}', result)
+# def fetch_neighborhood_populations(city):
+#     # fetch the population of each neighborhood in the given city
+#     client = Cerebras(
+#         api_key=os.getenv('CEREBRAS_API'))
 
-    # evaluate as a dict
-    neighborhood_populations = eval(match[0])
-    return neighborhood_populations
+#     chat_completion = client.chat.completions.create(
+#         model="llama3.1-8b",
+#         messages=[
+#             {"role": "user", "content": f"Generate a Python dictionary where the keys are the neighborhoods of {city} and the values are the population counts. Format the output as a valid Python dictionary without any comment.", }
+#         ],
+#     )
 
+#     # Extract and process the result
+#     result = chat_completion.choices[0].message.content.strip()
+#     # Fetch {...} part in the responded string
+#     match = re.findall(r'\{[^}]*\}', result)
+
+#     input = {
+#         'city': city,
+#         'pop': neighborhood_populations
+#     }
+#     neighborhoods_db.insert_one(input)
+
+#     return neighborhood_populations
+
+
+rents = fetch_rents('Seattle')
+print(rents)
 
 if __name__ == '__main__':
     app.run(debug=True)

@@ -30,10 +30,10 @@ populations_db = db['population']
 
 
 @app.route('/', methods=['GET'])
-def find_best_locations(city, cuisine_type, price_level):
-    # city = request.args.get('city')
-    # cuisine_type = request.args.get('cuisine_type')
-    # price_level = request.args.get('price_level')
+def find_best_locations():
+    city = request.args.get('city')
+    cuisine_type = request.args.get('cuisine_type')
+    price_level = request.args.get('price_level')
     rents = fetch_rents(city)
     candidates = [{
         'total_distance_to_competitors': 0,

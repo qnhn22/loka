@@ -3,7 +3,7 @@ import requests
 import os
 from dotenv import load_dotenv
 import json
-from pymongo import MongoClient
+from pymongo import MongoClient, errors
 from pymongo.server_api import ServerApi
 import math
 from urllib.parse import quote_plus
@@ -23,7 +23,7 @@ client = MongoClient(mongo_uri, server_api=ServerApi(
 db = client['loka']
 restaurants_db = db['restaurant']
 rents_db = db['rent']
-neighborhoods_db = db['neighborhood']
+populations_db = db['population']
 
 
 @app.route('/', methods=['GET'])
@@ -33,6 +33,7 @@ def find_best_locations():
     price_level = request.args.get('price_level')
     rents = fetch_rents(city)
     candidates = [{
+        'id': '',
         'total_distance_to_competitors': 0,
         'cost': 0,
         ' population': 0,
@@ -40,6 +41,7 @@ def find_best_locations():
 
     for i in range(len(rents)):
         r = rents[i]
+        candidates[i]['id'] = r['listingId']
         candidates[i]['total_distance_to_competitiors'] = calculate_distance_competitors(
             (r['lng'], r['lat']), city, cuisine_type, price_level)
         candidates[i]['cost'] = r['cost']
@@ -74,8 +76,7 @@ def fetch_rents(city):
     }
 
     samples = rentsData[:20]
-
-    neighborhoods_pop = neighborhoods_db.find_one({'city': city})['pop']
+    print(samples)
 
     for i in range(len(samples)):
         listingId = samples[i]['listingId']
@@ -88,33 +89,22 @@ def fetch_rents(city):
         response = requests.post(
             listing_detail_endpoint, headers=headers, json=body)
         data = response.json().get('data', [])
+        print("kekekekekekek")
         file_path = 'listings.json'
         with open(file_path, 'w') as f:
             json.dump(data, f, indent=4)
         if not data:
             continue
-        gg_geocoding_api_key = os.getenv('GOOGLE_MAP_API')
-        gg_geocoding_api = f"https://maps.googleapis.com/maps/api/geocode/json?latlng={lat},{lng}&key={gg_geocoding_api_key}"
-        response = requests.get(gg_geocoding_api)
 
-        results = response.json().get('results', [])
-
-        if not results:
-            continue
-        address_components = results[0].get("address_components", [])
-
-        neighborhood = ''
-        for component in address_components:
-            if 'neighborhood' in component['types']:
-                # Return the neighborhood name
-                neighborhood = component['long_name']
-        if not neighborhood or neighborhood not in neighborhoods_pop:
-            continue
+        print("kekekekekekek")
 
         rents = []
-
-        # if data[0]['price'] == None:
-        #     continue
+        population = 5000
+        zip_population = populations_db.find_one(
+            {'zipcode': data[0]['location']['postalCode']})
+        print(zip_population)
+        if zip_population:
+            population = zip_population['population']
 
         rent = {
             'listingId': listingId,
@@ -122,12 +112,12 @@ def fetch_rents(city):
             'lat': lat,
             'city': city,
             'cost': random.randint(2000, 4000),
-            'population': neighborhoods_pop[neighborhood]
+            'population': population
         }
+
         rents.append(rent)
         rents_db.insert_one(rent)
 
-        time.sleep(0.5)
     return res
 
 
@@ -209,9 +199,6 @@ def calculate_distance_competitors(coor, city, cuisine_type, price_level):
 
 #     return neighborhood_populations
 
-
-rents = fetch_rents('Seattle')
-print(rents)
 
 if __name__ == '__main__':
     app.run(debug=True)

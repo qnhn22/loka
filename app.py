@@ -68,11 +68,10 @@ def find_best_locations():
         data['distance'].append(candidates[i]['total_distance_to_competitors'])
         data['price'].append(candidates[i]['cost'])
         data['population'].append(candidates[i]['population'])
-    print(data)
 
     w_s_op = WeightSumOptimization(data)
     rank = w_s_op.rank_data()
-    print(rank)
+
     ranked_candidates = [tuple(x) for x in rank.to_records(index=False)]
     locations = []
 
@@ -85,13 +84,13 @@ def find_best_locations():
         cost = ranked_candidates[i][1]
         population = ranked_candidates[i][2]
         locations.append({
-            'distance': distance,
-            'cost': cost,
-            'population': population,
+            'distance': int(distance),
+            'cost': int(cost),
+            'population': int(population),
             'lng': metrics_coors[(distance, cost, population)]['lng'],
             'lat': metrics_coors[(distance, cost, population)]['lat']
         })
-    print(locations)
+
     return jsonify(locations)
 
 
@@ -121,13 +120,11 @@ def fetch_rents(city):
     }
 
     samples = rentsData[:20]
-    print(samples)
 
     for i in range(len(samples)):
         listingId = samples[i]['listingId']
         lng = samples[i]['coordinations'][0][0]
         lat = samples[i]['coordinations'][0][1]
-        print("listingId", listingId)
         body = {
             "listingId": listingId
         }
@@ -138,13 +135,11 @@ def fetch_rents(city):
         if not data:
             continue
 
-        print("kekekekekekek")
-
         rents = []
         population = 5000
         zip_population = populations_db.find_one(
             {'zipcode': data[0]['location']['postalCode']})
-        print(zip_population)
+
         if zip_population:
             population = zip_population['population']
 
@@ -168,8 +163,6 @@ def fetch_restaurants(city, cuisine_type):
         "city": city,
         "cuisine_type": cuisine_type,
     }
-
-    print("hello world")
 
     # check whether cuisine_type restaurants from city have been fetch from API,
     restaurants = list(restaurants_db.find(query, {"_id": 0}))

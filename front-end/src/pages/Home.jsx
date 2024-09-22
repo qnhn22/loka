@@ -1,13 +1,32 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Map from "../components/Map";
 import Input from "../components/Input";
 import { withRequiredAuthInfo } from "@propelauth/react";
-
+import axios from "axios";
 function HomePage() {
+  const [showResults, toggleShowResults] = useState(true);
   const [city, setCity] = useState("");
   const [cuisine, setCuisine] = useState("");
   const [costLevel, setCostLevel] = useState("");
   const [rentBudget, setRentBudget] = useState("");
+  const [locations, setLocations] = useState([]);
+  useEffect(() => { 
+    setLocations([
+      {
+        "cost": 2500,
+        "distance": 0,
+        "lat": 40.712776,
+        "lng": -74.005974,
+        "population": 5000
+      },
+      {
+        "cost": 2700,
+        "distance": 0,
+        "lat": 40.713776,
+        "lng": -74.004974,
+        "population": 5000
+      },])
+  }, []);
   const inputStyle =
     "min-w-[100px] w-full p-2   border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500";
   const handleSubmit = (e) => {
@@ -18,7 +37,19 @@ function HomePage() {
       costLevel,
       rentBudget,
     };
-    // navigate('/results', { state: searchParams });
+    toggleShowResults(true);
+    const endPoint = "YOUR_API_ENDPOINT";
+    // axios
+    //   .get(endPoint, {
+    //     headers: searchParams,
+    //   })
+    //   .then((response) => {
+    //     setLocations(response.data);
+    //     toggleShowResults(true);
+    //   })
+    //   .catch((error) => {
+    //     console.error('There was an error fetching the data!', error);
+    //   });
   };
 
   return (
@@ -72,9 +103,38 @@ function HomePage() {
             </div>
           </>
         </div>
-        <div className="w-[70%]">
-          <Map />
+        {showResults ? (
+        <>
+          <div className="relative w-[25%] bg-opacity-50 bg-gray-200 p-4 text-lg">
+            <button
+              className="absolute top-0 right-0 m-2 cursor-pointer text-xl"
+              onClick={() => { toggleShowResults(false) }}
+            >
+              X
+            </button>
+            {locations.map((location, index) => (
+              <div key={index} className=" border-b-2 border-gray-400 mt-2 flex-col flex justify-start gap-x-3 p-3">
+                <span><b>Cost:</b> {location.cost} $</span>
+                <span><b>Population:</b> {location.population}</span>
+                <span><b>Total Distance from competitors:</b> {location.distance}  </span>
+
+              </div>
+            ))}
+          </div>
+        </>
+      ) : (
+        <></>
+      )}
+      {showResults ?( <>
+        <div className="w-[50%]">
+          <Map locations={locations}/>
         </div>
+      </>):<>
+      
+        <div className="w-[70%]">
+          <Map locations={locations}/>
+        </div>
+      </>}
       </div>
     </>
   );

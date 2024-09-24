@@ -1,4 +1,6 @@
-**Project:** Loka.ai/**Members:** Quan Nguyen, Duc Nguyen, Long Bui
+**Project:** Loka.ai
+
+**Members:** Quan Nguyen, Duc Nguyen, Long Bui
 
 ## I. Motivations
 While small businesses represent 44% of the U.S. GDP, 99% of all firms, and have generated 63% of new jobs over the last decade, they face challenges in leveraging data-driven decision-making to enhance profitability comparing larger enterprises. This may be due to the lack of resources and experience necessary to implement data-driven technologies and invest in research and development. 
@@ -29,10 +31,10 @@ Focusing first on F&B industry. **Why F&B ?**
 ![System Diagram](https://raw.githubusercontent.com/qnhn22/loka/refs/heads/main/pics/system_diagram.png)
 
 
-- Pull APIs from different data sources (GoogleMapAPI, Census Bureau, NY Open Data)
+- Aggregate data by leveraging APIs from multiple sources" (GoogleMapAPI, Census Bureau, NY Open Data)
 - Integrate pulled data into [MongoDB](https://github.com/mongodb/mongo)
-- Utilize [React](https://github.com/facebook/react) to construct web interface
-- Optimize [Flask](https://github.com/pallets/flask) to build server
+- Develop a responsive web interface using [React](https://github.com/facebook/react)
+- "Enhance server-side performance by implementing [Flask](https://github.com/pallets/flask)
 - Develop a machine learning model that captures essential parameters using [Cerebas API](https://github.com/Cerebras) to rank most optimized locations
 - Leverage [PropelAuthority](https://github.com/orgs/PropelAuth/repositories) to authorize user management
 - Design, reorganize, and visualize metrics into meaningful and understandable insights

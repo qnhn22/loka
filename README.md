@@ -34,7 +34,7 @@ Focusing first on F&B industry. **Why F&B ?**
 - Aggregate data by leveraging APIs from multiple sources" (GoogleMapAPI, Census Bureau, NY Open Data)
 - Integrate pulled data into [MongoDB](https://github.com/mongodb/mongo)
 - Develop a responsive web interface using [React](https://github.com/facebook/react)
-- "Enhance server-side performance by implementing [Flask](https://github.com/pallets/flask)
+- Enhance server-side performance by implementing [Flask](https://github.com/pallets/flask)
 - Develop a machine learning model that captures essential parameters using [Cerebas API](https://github.com/Cerebras) to rank most optimized locations
 - Leverage [PropelAuthority](https://github.com/orgs/PropelAuth/repositories) to authorize user management
 - Design, reorganize, and visualize metrics into meaningful and understandable insights

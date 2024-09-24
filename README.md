@@ -3,36 +3,15 @@
 **Members:** Quan Nguyen, Duc Nguyen, Long Bui
 
 ## I. Motivations
-While small businesses represent 44% of the U.S. GDP, 99% of all firms, and have generated 63% of new jobs over the last decade, they face challenges in leveraging data-driven decision-making to enhance profitability comparing larger enterprises. This may be due to the lack of resources and experience necessary to implement data-driven technologies and invest in research and development. 
+An innovative platform to identify **ideal locations** for food & beverage enterprises, focusing on customer demographics, potential markets, costs, and competition. This approach addresses the needs of the F&B industry, where 97% are firms facing operational and economic challenges. With the U.S. packaged food market projected to reach $1.6 trillion by 2030, optimizing location decisions is crucial for success
 
-A platform that could help small firms to **optimize** their **financial resosurces** and **understand** of **market dynamics** has become more **urgent**.
-
-## II. Solution Overview
-Given our limited resources and time, we aim to focus on a specific area that best showcases the potential of this approach:
-
-_An innovative approach to identify the **ideal locations** for small-scale food and beverage enterprises._
-
-Most optimized location. **What it demonstrates ?**
-
-- Customer demographics
-- Potential Markets
-- Rental & operational costs
-- Competitor presence
-
-
-Focusing first on F&B industry. **Why F&B ?**
-- **99.9%** of businesses in F&B industry are small firms.
-- **56%** of F&B business owners struggle with managing operational costs and profitability
-- **52%** cite economic uncertainty as a major hurdleeconomic uncertainty as a significant hurdle.
-- The U.S. packaged food market is projected to reach **US$1.6 trillion** by 2030
-
-## III. Milestones & Challenges
+## II. Milestones & Challenges
 
 ![System Diagram](https://raw.githubusercontent.com/qnhn22/loka/refs/heads/main/pics/system_diagram.png)
 
 
 - Aggregate data by leveraging APIs from multiple sources" (GoogleMapAPI, Census Bureau, NY Open Data)
-- Integrate pulled data into [MongoDB](https://github.com/mongodb/mongo)
+- Integrate and clean pulled data into [MongoDB](https://github.com/mongodb/mongo)
 - Develop a responsive web interface using [React](https://github.com/facebook/react)
 - Enhance server-side performance by implementing [Flask](https://github.com/pallets/flask)
 - Develop a machine learning model that captures essential parameters using [Cerebas API](https://github.com/Cerebras) to rank most optimized locations
@@ -40,7 +19,7 @@ Focusing first on F&B industry. **Why F&B ?**
 - Design, reorganize, and visualize metrics into meaningful and understandable insights
 
 
-## IV. Takeaways
+## III. Takeaways
 ### Pros
 
 + **Operational and Functional**: The app is fully operational, allowing users to access its features seamlessly, enabling immediate utilization for business enhancement.
@@ -57,7 +36,7 @@ Focusing first on F&B industry. **Why F&B ?**
 
 + **Data Dependencies**: Fetching data from different sources and does not have inernal data may lead to disrupt the system if sources collasped.
 
-## V. Future Enhancements
+## IV. Future Enhancements
 ### Model Improvements:
 1. **Market Equilibrium Adjustment**: 
 Implement dynamic Supply & Demand balancing algorithms to reflect real-time market conditions.

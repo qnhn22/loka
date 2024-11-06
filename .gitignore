@@ -1,9 +1,0 @@
-.env
-venv
-__pycache__/
-*.pyc
-listingDetails
-data.py 
-listings.json
-.venv
-sample.js

@@ -6,11 +6,11 @@ WORKDIR /app
 
 # Install required packages
 RUN apt-get update -qq \
-      && apt-get install -y --no-install-recommends \
-      build-essential \
-      python3-dev \
-      && apt-get clean \
-      && rm -rf /var/lib/apt/lists/*
+  && apt-get install -y --no-install-recommends \
+  build-essential \
+  python3-dev \
+  && apt-get clean \
+  && rm -rf /var/lib/apt/lists/*
 
 # Copy the current directory contents into the container at /app
 COPY . /app

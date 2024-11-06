@@ -7,3 +7,4 @@ data.py
 listings.json
 .venv
 sample.js
+front-end/src/config.jsx

@@ -3,7 +3,7 @@ import { APIProvider, Map, Marker, InfoWindow } from '@vis.gl/react-google-maps'
 const GoogleMap = ({ locations }) => {
   const [selectedMarker, setSelectedMarker] = useState(null);
   const [topLocations, setTopLocations] = useState(locations);
-  const key = "AIzaSyDpLOyGUc0JQH8U79KVMOnXbh1ZG57BnmE"
+  const key = process.env.GOOGLE_MAP_API;
   const [center, setCenter] = useState({ lat: 33, lng: -118 })  // Adjust this to fit your use case
   const handleMarkerClick = (location) => {
     setSelectedMarker(location);
